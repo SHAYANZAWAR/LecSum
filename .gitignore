@@ -1,0 +1,13 @@
+
+# Backend ignore files
+
+backend/__pycache__/
+backend/backend_env
+backend/uploads
+backend/.env
+backend/convert.py
+backend/test.aac
+
+# Frontend ignore files
+frontend/frontend_env
+frontend/.env

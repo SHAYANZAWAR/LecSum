@@ -1,0 +1,1 @@
+streamlit==1.39.0; requests==2.32.4; python-dotenv==1.1.0 websockets==13.1 pydub==0.25.1

@@ -10,6 +10,7 @@ from pydub import AudioSegment
 import shutil
 import requests
 from typing import Optional
+from audio_processing import process_audio 
 import json
 import time
 
@@ -139,10 +140,14 @@ async def upload_audio(audio: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, f"{lecture_id}_{audio.filename}")
     with open(file_path, "wb") as f:
         f.write(content)
+    # save the processed audio file
+    print(f"File saved: {file_path}")
+    file_path = process_audio(file_path, f"{lecture_id}.mp3")
     
     try:
+        
         # Transcribe with local Whisper
-        transcript = transcribe_audio(file_path)
+        # transcript = transcribe_audio(file_path)
         
                  
         # Summarize with DeepSeek
@@ -155,7 +160,7 @@ async def upload_audio(audio: UploadFile = File(...)):
         return {
             "lecture_id": lecture_id,
             # "summary": summary,
-            "transcript": transcript,
+            # "transcript": transcript,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

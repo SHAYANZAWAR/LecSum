@@ -11,3 +11,5 @@ backend/test.aac
 # Frontend ignore files
 frontend/frontend_env
 frontend/.env
+
+temp.py

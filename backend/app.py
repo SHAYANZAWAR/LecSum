@@ -116,11 +116,40 @@ class DeepSeekClient:
 
 deepseek_client = DeepSeekClient(OPENROUTER_API_KEY)
 
+
+class OllamaTranscriptionClient:
+    def __init__(self, base_url: str = "http://localhost:11434"):
+        self.base_url = base_url
+        self.model = "gemma3n:e4b"
+
+    def transcribe(self, file_path: str, language: str = "English") -> str:
+        # Read audio file as bytes
+        with open(file_path, "rb") as f:
+            audio_bytes = f.read()
+        # Ollama's /api/generate expects a prompt, so we use a transcription prompt
+        prompt = (
+            f"Transcribe the following audio file to {language} text. "
+            "Only output the transcription, nothing else."
+        )
+        
+        files = {
+            "file": (os.path.basename(file_path), audio_bytes, "audio/wav")
+        }
+        data = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False
+        }
+        response = requests.post(f"{self.base_url}/api/generate", data=data, files=files)
+        response.raise_for_status()
+        return response.json()["response"]
+
+ollama_transcriber = OllamaTranscriptionClient()
+
 def transcribe_audio(file_path: str) -> str:
-    """Transcribe audio using local OpenAI Whisper."""
+    """Transcribe audio using Ollama Gemma3n:e4b."""
     try:
-        result = whisper_model.transcribe(file_path)
-        return result["text"]
+        return ollama_transcriber.transcribe(file_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
 
@@ -147,11 +176,11 @@ async def upload_audio(audio: UploadFile = File(...)):
     try:
         
         # Transcribe with local Whisper
-        # transcript = transcribe_audio(file_path)
+        transcript = transcribe_audio(file_path)
         
                  
         # Summarize with DeepSeek
-        # summary = deepseek_client.summarize(transcript)
+        summary = deepseek_client.summarize(transcript)
         # print(f"Summary generated: {summary}")
         # Store transcript and summary
         # with open(os.path.join(UPLOAD_DIR, f"{lecture_id}_summary.txt"), "w") as f:
@@ -159,8 +188,8 @@ async def upload_audio(audio: UploadFile = File(...)):
         
         return {
             "lecture_id": lecture_id,
-            # "summary": summary,
-            # "transcript": transcript,
+            "summary": summary,
+            "transcript": transcript,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
